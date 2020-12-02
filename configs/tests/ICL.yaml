@@ -1,0 +1,18 @@
+TEST:
+  name: ICL
+SETTINGS:
+  data_path: /living1
+DATA:
+  root_dir: /living1
+  key: noisy_depth
+  dataset: ICL
+  test_scene_list: lists/shapenet/fusion/test.txt
+  resx: 320
+  resy: 240
+  init_value: 0.1
+TESTING:
+  prefix: configs/tests
+  tests:
+    - ICL.yaml
+  shuffle: False
+  batch_size: 1

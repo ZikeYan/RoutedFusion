@@ -69,6 +69,7 @@ def train_fusion(args):
     if config.ROUTING.do:
         assert args['routing_model'] is not None
         routing_checkpoint = os.path.join(args['routing_model'], 'best.pth.tar')
+        print("routing checkpoint: ", routing_checkpoint)
         load_model(routing_checkpoint, pipeline._routing_network)
 
     optimizer = torch.optim.RMSprop(pipeline._fusion_network.parameters(),

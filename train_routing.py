@@ -2,11 +2,12 @@ import torch
 import argparse
 import datetime
 
+
 import numpy as np
 
 from tqdm import tqdm
 
-from utils.loading import load_config_from_yaml
+from utils.loading import load_config_from_yaml,load_model
 from utils.setup import *
 
 from utils.loss import RoutingLoss
@@ -17,7 +18,7 @@ def arg_parser():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--config', required=False)
-    parser.add_argument('--device', default='cpu', required=False)
+    parser.add_argument('--device', default='gpu', required=False)
 
     args = parser.parse_args()
 
@@ -30,7 +31,7 @@ def train(args, config):
         device = torch.device("cpu")
     elif args['device'] == 'gpu':
         device = torch.device('cuda:0')
-
+    print("###################", args['device'])
     config.TIMESTAMP = datetime.datetime.now().strftime('%y%m%d-%H%M%S')
 
     workspace = get_workspace(config)
@@ -38,7 +39,10 @@ def train(args, config):
 
     # get train dataset
     train_data_config = get_data_config(config, mode='train')
+    #print(train_data_config)
+    #print(train_data_config)
     train_dataset = get_data(config.DATA.dataset, train_data_config)
+    #print(train_dataset)
     train_loader = torch.utils.data.DataLoader(train_dataset, config.TRAINING.train_batch_size)
 
     # get val dataset
@@ -54,6 +58,9 @@ def train(args, config):
                               depth=config.MODEL.depth,
                               batchnorms=config.MODEL.normalization)
     model = model.to(device)
+    #model_path = os.path.join('/home/yan/Work/opensrc/RoutedFusion/experiments/routing/201119-223556/model/last.pth.tar')
+    model_path = os.path.join('/home/yan/Work/opensrc/RoutedFusion/pretrained_models/routing/shapenet_noise_005/best.pth.tar')
+    load_model(model_path, model)
 
     # define loss function
     criterion = RoutingLoss(config.LOSS)
@@ -96,10 +103,12 @@ def train(args, config):
         for i, batch in enumerate(tqdm(train_loader, total=n_train_batches)):
 
             inputs = batch[config.DATA.input]
+
             inputs = inputs.unsqueeze_(1)
             inputs = inputs.to(device)
 
             target = batch[config.DATA.target]
+
             target = target.to(device)
             target = target.unsqueeze_(1)
 
@@ -238,6 +247,7 @@ if __name__ == '__main__':
 
     # get configs
     config = load_config_from_yaml(args['config'])
+    #print(config.DATA)
 
     # train
     train(args, config)

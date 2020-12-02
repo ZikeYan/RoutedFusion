@@ -1,7 +1,8 @@
 import torch
 import os
 import logging
-from dataset import ShapeNet
+#from dataset import ShapeNet
+from dataset import ICL
 
 from torch.utils.tensorboard import SummaryWriter
 
@@ -32,7 +33,6 @@ def get_data_config(config, mode):
 
 
 def get_data(dataset, config):
-
     try:
         return eval(dataset)(config.DATA)
     except AttributeError:
@@ -52,6 +52,7 @@ def get_database(dataset, config, mode='train'):
 def get_workspace(config):
     workspace_path = os.path.join(config.SETTINGS.experiment_path,
                                   config.TIMESTAMP)
+    print(workspace_path)
     workspace = Workspace(workspace_path)
     return workspace
 
@@ -100,7 +101,7 @@ class Workspace(object):
         self.model_path = os.path.join(path, 'model')
         self.log_path = os.path.join(path, 'logs')
         self.output_path = os.path.join(path, 'output')
-
+        #print(self.workspace_path, self.model_path, self.log_path, self.output_path)
         os.makedirs(self.workspace_path)
         os.makedirs(self.model_path)
         os.makedirs(self.log_path)

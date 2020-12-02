@@ -25,7 +25,7 @@ class Pipeline(torch.nn.Module):
         self._integrator = Integrator(config.MODEL)
 
     def _routing(self, data):
-
+        #print("data config: ", self.config.DATA.input)
         inputs = data[self.config.DATA.input]
         inputs = inputs.to(self.device)
         # inputs = inputs.to(device)
@@ -124,21 +124,25 @@ class Pipeline(torch.nn.Module):
              device):
 
         self.device = device
-
+        #print("original data: ", batch['noisy_depth'])
         # routing
         if self.config.ROUTING.do:
+            #print("+++++++++++++  ROUTING YES")
             frame, confidence = self._routing(batch)
             frame[confidence < self.config.ROUTING.threshold] = 0
         else:
+            #print("-------------  ROUTING NO")
             frame = batch[self.config.DATA.input].squeeze_(1)
             frame = frame.to(device)
             confidence = None
-
+        #print("confidence: ", confidence)
+        #print("threshold: ", self.config.ROUTING.threshold, "filtered data: ", frame)
         mask = batch['mask'].to(device)
         filtered_frame = torch.where(mask == 0, torch.zeros_like(frame),
                                      frame)
 
         # get current tsdf values
+        #print("&&&&&&&&&&", batch['scene_id'])
         scene_id = batch['scene_id'][0]
         volume = database[scene_id]
 
@@ -172,6 +176,7 @@ class Pipeline(torch.nn.Module):
                                                                     tsdf_est,
                                                                     filtered_frame)
 
+
         values, weights = self._integrator.forward(update_values.to(device),
                                                    update_indices.to(device),
                                                    update_weights.to(device),
@@ -181,12 +186,8 @@ class Pipeline(torch.nn.Module):
                                                    database[
                                                        batch['scene_id'][0]][
                                                        'weights'].to(device))
-
-
-        database.scenes_est[
-            batch['scene_id'][0]].volume = values.cpu().detach().numpy()
-        database.fusion_weights[
-            batch['scene_id'][0]] = weights.cpu().detach().numpy()
+        database.scenes_est[0].volume = values.cpu().detach().numpy() # Here changes. Original: scenes_est[batch['scene_id'][0]]
+        database.fusion_weights[0] = weights.cpu().detach().numpy()
 
         return
 
@@ -228,7 +229,9 @@ class Pipeline(torch.nn.Module):
 
         # get current tsdf values
         scene_id = batch['scene_id'][0]
+        print("batch: ", batch, "scene id: ", scene_id)
         volume = database[scene_id]
+        print("volume: ", volume['weights'])
 
 
         values = self._extractor.forward(frame,

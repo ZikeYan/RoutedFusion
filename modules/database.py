@@ -17,32 +17,30 @@ class Database(Dataset):
 
         self.transform = config.transform
         self.initial_value = config.init_value
-
         self.scenes_gt = {}
         self.scenes_est = {}
         self.fusion_weights = {}
+        grid = dataset.get_grid()
 
-        for s in dataset.scenes:
+        self.scenes_gt[0] = grid
 
-            grid = dataset.get_grid(s, truncation=self.initial_value)
+        init_volume = self.initial_value * np.ones_like(grid.volume)
 
-            self.scenes_gt[s] = grid
-
-            init_volume = self.initial_value * np.ones_like(grid.volume)
-
-            self.scenes_est[s] = Voxelgrid(self.scenes_gt[s].resolution)
-            self.scenes_est[s].from_array(init_volume, self.scenes_gt[s].bbox)
-            self.fusion_weights[s] = np.zeros(self.scenes_gt[s].volume.shape)
+        self.scenes_est[0] = Voxelgrid(self.scenes_gt[0].resolution)
+        self.scenes_est[0].from_array(init_volume, self.scenes_gt[0].bbox)
+        print(self.scenes_gt[0].volume.shape)
+        self.fusion_weights[0] = np.zeros(self.scenes_gt[0].volume.shape)
 
     def __getitem__(self, item):
 
         sample = dict()
 
-        sample['gt'] = self.scenes_gt[item].volume
-        sample['current'] = self.scenes_est[item].volume
-        sample['origin'] = self.scenes_gt[item].origin
-        sample['resolution'] = self.scenes_gt[item].resolution
-        sample['weights'] = self.fusion_weights[item]
+        sample['gt'] = self.scenes_gt[0].volume
+        sample['current'] = self.scenes_est[0].volume
+        sample['origin'] = self.scenes_gt[0].origin
+        sample['resolution'] = self.scenes_gt[0].resolution
+        sample['weights'] = self.fusion_weights[0]
+
 
         if self.transform is not None:
             sample = self.transform(sample)
@@ -73,20 +71,18 @@ class Database(Dataset):
             workspace.save_tsdf_data(tsdf_file, tsdf_volume)
             workspace.save_weigths_data(weight_file, weight_volume)
 
-    def save(self, path, scene_id=None, epoch=None, groundtruth=False):
+    def save(self, path, scene_id=None, epoch=None, groundtruth=True):
 
         if scene_id is None:
             raise NotImplementedError
         else:
             if epoch is not None:
-                filename = '{}.{}.volume.hf5'.format(scene_id.replace('/', '.'),
-                                              epoch)
-                weightname = '{}.{}.weights.hf5'.format(scene_id.replace('/', '.'),
-                                                        epoch)
+                filename = 'living.volume.hf5'
+                weightname = 'living.weights.hf5'
             else:
-                filename = '{}.volume.hf5'.format(scene_id.replace('/', '.'))
-                weightname = '{}.weights.hf5'.format(scene_id.replace('/', '.'))
-
+                filename = 'living.volume.hf5'
+                weightname = 'living.weights.hf5'
+            print("volume number: ", self.scenes_est[scene_id].volume.shape)
             with h5py.File(os.path.join(path, filename), 'w') as hf:
                 hf.create_dataset("TSDF",
                                   shape=self.scenes_est[scene_id].volume.shape,
@@ -97,7 +93,7 @@ class Database(Dataset):
                                   data=self.fusion_weights[scene_id])
 
             if groundtruth:
-                groundtruthname = '{}.gt.hf5'.format(scene_id.replace('/', '.'))
+                groundtruthname = 'living.gt.hf5'
                 with h5py.File(os.path.join(path, groundtruthname), 'w') as hf:
                     hf.create_dataset("TSDF",
                                       shape=self.scenes_gt[

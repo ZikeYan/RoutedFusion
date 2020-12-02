@@ -173,7 +173,6 @@ class Replica(Dataset):
         return sample
 
     def get_grid(self):
-
         bbox_file = os.path.join(self.root_dir, 'bbox.txt')
         grid_file = os.path.join(self.root_dir, '{}_occ.hf5'.format(self.scene))
 

@@ -13,7 +13,7 @@ def load_config_from_yaml(path):
     :param path: yaml-filepath with configs stored
     :return: easydict containing config
     """
-    c = yaml.load(open(path))
+    c = yaml.load(open(path),Loader=yaml.FullLoader)
     config = EasyDict(c)
 
     return config
@@ -38,6 +38,7 @@ def load_experiment(path):
     :param path: path to experiment folder
     :return: easydict containing config
     """
+    #print("!!!!!!!!!!!", path)
     path = os.path.join(path, 'config.json')
     config = load_config_from_json(path)
     return config
