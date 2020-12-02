@@ -67,7 +67,7 @@ def test_fusion(args, model_config, test_config):
     print("!!!!!!!!!!!!!!!!",model_path)
     loading.load_pipeline(model_path, pipeline)
     #routing_checkpoint = os.path.join('/home/yan/Work/opensrc/RoutedFusion/pretrained_models/routing/shapenet_noise_005/ori_best.pth.tar')
-    routing_checkpoint = os.path.join('/home/yan/Work/opensrc/RoutedFusion/experiments/routing/finetuned_living2/model/best.pth.tar')
+    routing_checkpoint = os.path.join('/home/yan/Work/opensrc/learning/RoutedFusion/experiments/routing/finetuned_living2/model/best.pth.tar')
     loading.load_model(routing_checkpoint, pipeline._routing_network)
 
     pipeline.eval()
